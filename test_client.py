@@ -15,7 +15,7 @@ def send_command(packet_type: int, data: bytearray) -> tuple[int, bytearray]:
     data[:0] = struct.pack("<I", len(data))
     data.insert(0, packet_type)
     print("Sending: " + str(len(data)) + " bytes!")
-    print("First 16 bytes being sent: " + ", ".join(str(x) for x in data[:16]))
+    print("First 64 bytes being sent: " + ", ".join(str(x) for x in data[:64]))
     sock.send(data)
     return receive_command()
 
@@ -54,7 +54,7 @@ def map(cmd):
     print_response(pt,rd)
 
 def bounds(cmd):
-    packet_type, result_data = send_command(3, bytearray(struct.pack("<HHHH", int(cmd[1]),int(cmd[2]),int(cmd[3]),int(cmd[4]))))
+    pt,rd = send_command(3, bytearray(struct.pack("<HHHH", int(cmd[1]),int(cmd[2]),int(cmd[3]),int(cmd[4]))))
     print_response(pt,rd)
 
 def beacon(cmd):
@@ -64,6 +64,42 @@ def beacon(cmd):
 def scan():
     pt, rd = send_command(8,bytearray())
     print_response(pt,rd)
+
+def token(cmd):
+    id = int(cmd[1])
+    x = int(cmd[2])
+    y = int(cmd[3])
+    w = int(cmd[4])
+    h = int(cmd[5])
+    rgba_im = Image.open(cmd[6]).convert("RGBA")
+    width = rgba_im.width
+    height = rgba_im.height
+    data = bytearray(16 + 8 + (width * height * 4) + 4)
+    struct.pack_into("<L",data,0,id)
+    struct.pack_into("<hhHH",data,16,x,y,w,h)
+    struct.pack_into("<HH", data,24, width,height)
+    index = 28
+
+    for y in range(height):
+        for x in range(width):
+            r,g,b,a = rgba_im.getpixel((x,y))
+            struct.pack_into("<BBBB",data,index,r,g,b,a)
+            index += 4
+    print("Sending a token image of width " + str(width) + ", and height " + str(height))
+    pt, rd = send_command(2,data)
+    print_response(pt,rd)
+
+def move(cmd):
+   id = int(cmd[1])
+   x = int(cmd[2])
+   y = int(cmd[3])
+   pt,rd = send_command(4,bytearray(struct.pack("<L12xhh",id,x,y)))
+   print_response(pt,rd)
+
+def delete(cmd):
+  id = int(cmd[1])
+  pt,rd = send_command(5,bytearray(struct.pack("<L12x",id)))
+  print_response(pt,rd)
 
 while True:
     command = input("> ").split()
@@ -82,6 +118,12 @@ while True:
                 beacon(command)
             case "scan":
                 scan()
+            case "token":
+                token(command)
+            case "move":
+                move(command)
+            case "delete":
+                delete(command)
             case _:
                 print("Unknown command!")
 

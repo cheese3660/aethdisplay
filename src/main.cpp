@@ -116,7 +116,7 @@ server_packet handle_token_upload(const client_packet& client_packet) {
 
     // Now let's assume that the data is sent through as a set of RGBA values encoded into uint32_ts
     if (stream.remaining() != (sizeof(uint32_t)) * (width * height)) {
-        return server_packet::err("Invalid map packet size! should be 8 + width * height!");
+        return server_packet::err("Invalid token packet size! should be 8 + width * height!");
     }
 
     auto surface = SDL_CreateRGBSurfaceFrom((void *)stream.offset_ptr(), width, height, 32, width * 4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);

@@ -11,7 +11,7 @@ void compositor::handle_event(const SDL_Event &event)
 
 void compositor::do_render()
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
     if (map != nullptr) {
@@ -43,7 +43,7 @@ compositor::compositor()
         throw std::runtime_error(err);
     }
 
-    this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    this->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     if (!renderer) {
         auto err = SDL_GetError();
         std::cerr << "SDL_CreateRenderer Error:" << err << '\n';
@@ -51,7 +51,7 @@ compositor::compositor()
         SDL_Quit();
         throw std::runtime_error(err);
     }
-    
+
     SDL_ShowCursor(SDL_DISABLE);
 }
 
@@ -74,7 +74,7 @@ void compositor::swap_map(SDL_Texture *new_map)
     if (map != nullptr) {
         SDL_DestroyTexture(map);
     }
-    tokens.clear();    
+    tokens.clear();
     map = new_map;
 }
 
